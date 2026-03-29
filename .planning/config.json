@@ -1,0 +1,21 @@
+{
+  "projectName": "VeraGenesi",
+  "projectType": "mobile-app",
+  "techStack": {
+    "frontend": "react-native",
+    "backend": "node.js",
+    "database": "pending-spec",
+    "auth": "pending-spec"
+  },
+  "workflow": {
+    "platform": "github",
+    "branch-strategy": "feature-branching",
+    "pr-reviews": true,
+    "async-execution": false
+  },
+  "preferences": {
+    "model-profile": "balanced",
+    "verbose-logging": false,
+    "commit-frequency": "per-phase"
+  }
+}
