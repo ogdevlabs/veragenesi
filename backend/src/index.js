@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const initializeDatabase = require('./config/initDb');
+const seedArchetypes = require('./config/seedDb');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -43,6 +44,10 @@ const startServer = async () => {
     console.log('🚀 Initializing database...');
     await initializeDatabase();
     console.log('✓ Database initialized');
+    
+    console.log('🌱 Seeding data...');
+    await seedArchetypes();
+    console.log('✓ Data seeded');
 
     app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`);

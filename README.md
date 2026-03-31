@@ -35,6 +35,22 @@ npm start
 
 **Full Setup Guide**: See [GETTING_STARTED.md](./GETTING_STARTED.md)
 
+### Stopping Services
+```bash
+# Stop all running services
+./stop-all.sh
+
+# Or use Make
+make stop-all
+
+# Or individually
+cd backend && npm run stop     # Stop backend
+cd frontend && npm run stop    # Stop frontend
+make stop                      # Stop Docker
+```
+
+**Full cleanup guide**: See [CLEANUP.md](./CLEANUP.md)
+
 ---
 
 ## Project Structure

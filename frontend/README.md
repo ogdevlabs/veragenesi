@@ -1,19 +1,56 @@
-# Frontend - VeraGenesi Mobile App
+# Frontend - VeraGenesi Mobile App (Expo)
 
-React Native application for iOS and Android.
+This is a React Native app built with **Expo** for simplified development without native build setup.
 
-## Setup
+## Quick Start
 
+### 1. Install Dependencies
 ```bash
 npm install
+```
+
+### 2. Start Development Server
+```bash
 npm start
 ```
 
-## Development
+### 3. Run on Device/Emulator
 
-- Run on Android: `npm run android`
-- Run on iOS: `npm run ios`
-- Run tests: `npm test`
+After running `npm start`, you'll see a QR code. Choose:
+
+**Option A: Expo Go (Recommended for Development)**
+- Download Expo Go app on your phone
+- Scan the QR code with your phone camera
+- App loads instantly on your device
+
+**Option B: Web Browser**
+```bash
+npm run web
+```
+
+**Option C: Android Emulator**
+```bash
+npm run android
+# Requires Android Studio emulator running
+```
+
+**Option D: iOS Simulator**
+```bash
+npm run ios
+# macOS only, requires Xcode
+```
+
+## Development Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm start` | Start Metro bundler with QR code |
+| `npm run web` | Preview in web browser |
+| `npm run android` | Run on Android emulator |
+| `npm run ios` | Run on iOS simulator |
+| `npm test` | Run Jest tests |
+| `npm run lint` | Lint code with ESLint |
+| `npm run format` | Format code with Prettier |
 
 ## Project Structure
 

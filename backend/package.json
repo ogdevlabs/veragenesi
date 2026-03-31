@@ -5,7 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "predev": "node scripts/ensure-docker.js",
     "dev": "nodemon src/index.js",
+    "stop": "pkill -f 'nodemon src/index.js' || true",
+    "stop-all": "cd .. && ./stop-all.sh",
     "test": "jest --coverage",
     "lint": "eslint .",
     "format": "prettier --write ."
@@ -16,7 +19,7 @@
     "cors": "^2.8.5",
     "pg": "^8.11.0",
     "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.1.2"
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.0",

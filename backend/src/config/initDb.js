@@ -1,8 +1,36 @@
 const pool = require('./database');
 
-const initializeDatabase = async () => {
+// Check if database is already initialized
+const isDatabaseInitialized = async () => {
   const client = await pool.connect();
   try {
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'users'
+      )
+    `);
+    return result.rows[0].exists;
+  } catch (error) {
+    console.error('Error checking database initialization:', error.message);
+    return false;
+  } finally {
+    client.release();
+  }
+};
+
+const initializeDatabase = async () => {
+  // Check if already initialized
+  const initialized = await isDatabaseInitialized();
+  if (initialized) {
+    console.log('✓ Database already initialized, skipping initialization');
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    console.log('📋 Running initial database setup...');
+    
     // Enable UUID extension
     await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
@@ -70,7 +98,7 @@ const initializeDatabase = async () => {
     await client.query('CREATE INDEX IF NOT EXISTS idx_assessments_user_id ON assessments(user_id)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_tool_usage_user_id ON tool_usage(user_id)');
 
-    console.log('✓ Database initialized successfully');
+    console.log('✓ Database schema created successfully');
   } catch (error) {
     console.error('✗ Database initialization error:', error);
     throw error;

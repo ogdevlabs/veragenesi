@@ -1,14 +1,14 @@
 const pool = require('../config/database');
 
 const ARCHETYPES = [
-  { id: 1, name: 'Héroe', short_name: 'hero' },
-  { id: 2, name: 'Sabio', short_name: 'sage' },
-  { id: 3, name: 'Amante', short_name: 'lover' },
-  { id: 4, name: 'Sombra', short_name: 'shadow' },
-  { id: 5, name: 'Cuidador', short_name: 'caregiver' },
-  { id: 6, name: 'Jungla', short_name: 'explorer' },
-  { id: 7, name: 'Mago', short_name: 'magician' },
-  { id: 8, name: 'Inocente', short_name: 'innocent' },
+  { id: 1, name: 'El Protector', short_name: 'protector' },
+  { id: 2, name: 'El Innovador', short_name: 'innovator' },
+  { id: 3, name: 'El Aventurero', short_name: 'adventurer' },
+  { id: 4, name: 'El Sabio', short_name: 'sage' },
+  { id: 5, name: 'El Amante', short_name: 'lover' },
+  { id: 6, name: 'El Gobernante', short_name: 'ruler' },
+  { id: 7, name: 'El Mago', short_name: 'magician' },
+  { id: 8, name: 'El Bufón', short_name: 'jester' },
 ];
 
 class AssessmentService {
@@ -41,13 +41,13 @@ class AssessmentService {
   static getArchetypeIndicesForQuestion(questionIndex, answer) {
     // Simple mapping - customize based on assessment design
     const mapping = {
-      0: [0, 2], // Question 0 -> Héroe, Amante
-      1: [1, 4], // Question 1 -> Sabio, Cuidador
-      2: [3, 5], // Question 2 -> Sombra, Jungla
-      3: [6, 7], // Question 3 -> Mago, Inocente
-      4: [0, 1], // Question 4 -> Héroe, Sabio
-      5: [2, 3], // Question 5 -> Amante, Sombra
-      6: [4, 5], // Question 6 -> Cuidador, Jungla
+      0: [0, 1, 2], // Question 0 -> Protector, Innovador, Aventurero
+      1: [3, 4], // Question 1 -> Sabio, Amante
+      2: [5, 6], // Question 2 -> Gobernante, Mago
+      3: [7, 0], // Question 3 -> Bufón, Protector
+      4: [1, 2], // Question 4 -> Innovador, Aventurero
+      5: [3, 4], // Question 5 -> Sabio, Amante
+      6: [5, 6, 7], // Question 6 -> Gobernante, Mago, Bufón
     };
     return mapping[questionIndex] || [0];
   }

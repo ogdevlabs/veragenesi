@@ -1,7 +1,26 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+// Web-compatible storage adapter
+const webStorage = {
+  getItem: async (key) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+    return null;
+  },
+  removeItem: async (key) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  },
+};
+
+// Use localStorage on web, AsyncStorage on native
+const storage = Platform.OS === 'web' ? webStorage : AsyncStorage;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +30,7 @@ const apiClient = axios.create({
 // Add token to requests
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken');
+    const token = await storage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,7 +47,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Clear token and redirect to login
-      await AsyncStorage.removeItem('authToken');
+      await storage.removeItem('authToken');
     }
     return Promise.reject(error);
   }

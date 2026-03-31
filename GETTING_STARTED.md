@@ -10,15 +10,47 @@ VeraGenesi is a lightweight emotional intelligence assessment app with immediate
 
 ## Prerequisites
 
+- **Docker & Docker Compose**: For local PostgreSQL (recommended)
 - **Node.js**: v18+ 
-- **PostgreSQL**: v13+
 - **npm**: v9+
 - **Git**: Latest version
-- **React Native CLI**: For native development (optional for Expo)
+
+**OR** (if not using Docker):
+- **PostgreSQL**: v13+ (must be running locally)
 
 ---
 
-## Backend Setup
+## Quick Start (Recommended - Docker)
+
+### 1. One-Command Setup (First Time Only)
+```bash
+chmod +x setup-local.sh
+./setup-local.sh
+```
+
+This script will:
+- Start PostgreSQL in Docker
+- Wait for database readiness
+- Install dependencies
+- Display next steps
+
+### 2. Start Development Server
+```bash
+cd backend
+npm run dev
+```
+
+**Note**: `npm run dev` automatically starts PostgreSQL if it's not running. No manual Docker commands needed!
+
+### 3. Stop Services (When Done)
+```bash
+# From project root:
+docker-compose down
+```
+
+---
+
+## Backend Setup (Manual - Without Docker)
 
 ### 1. Install Dependencies
 ```bash
@@ -35,17 +67,17 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=vera_genesi_dev
 PORT=3000
-JWT_SECRET=your-secret-key-change-in-production
 NODE_ENV=development
+JWT_SECRET=your-secret-key-change-in-production
 ```
 
+**Important**: PostgreSQL must be running on port 5432 before starting the server.
+
 ### 3. Initialize Database
-Ensure PostgreSQL is running, then start the server:
+Start the server (database will auto-initialize):
 ```bash
 npm run dev
 ```
-
-The database will auto-initialize on first run.
 
 ### 4. Verify Backend
 ```bash
@@ -55,7 +87,9 @@ curl http://localhost:3000/health
 
 ---
 
-## Frontend Setup
+## Frontend Setup (Expo)
+
+The frontend uses **Expo** — no native build tools required!
 
 ### 1. Install Dependencies
 ```bash
@@ -63,29 +97,64 @@ cd frontend
 npm install
 ```
 
-### 2. Configure Environment
-Create `.env` file:
-```
-REACT_APP_API_URL=http://localhost:3000
-REACT_APP_ENVIRONMENT=development
-```
-
-### 3. Start Development Server
+### 2. Start Development Server
 ```bash
 npm start
 ```
 
-This launches Expo CLI. Scan QR code with Expo Go app or run emulator.
+You'll see a QR code and a menu with options:
 
-### 4. Run on iOS (macOS only)
+### 3. Choose How to Run
+
+**⭐ Option A: Expo Go App (FASTEST - Recommended)**
+- Download "Expo Go" from App Store or Play Store
+- Scan the QR code with your phone camera
+- App loads instantly on your device
+
+**Option B: Web Browser** (Good for quick testing)
+```bash
+npm run web
+```
+
+**Option C: Android Emulator** (requires Android Studio)
+```bash
+npm run android
+# Note: If you get permission errors, see [ANDROID_TROUBLESHOOTING.md](./frontend/ANDROID_TROUBLESHOOTING.md)
+```
+
+**Option D: iOS Simulator** (macOS only, requires Xcode)
 ```bash
 npm run ios
 ```
 
-### 5. Run on Android
+### 4. View App on Your Phone
+
+**Recommended workflow**:
+1. Download **Expo Go** app on your phone
+2. Run `npm start` on your computer
+3. Scan the QR code with your phone's camera
+4. That's it! App appears on your phone instantly
+
+### 5. Troubleshooting
+
+If you get errors like "main has not been registered" or permission errors, see [ANDROID_TROUBLESHOOTING.md](./frontend/ANDROID_TROUBLESHOOTING.md)
+
+**Quick fix for most issues**:
 ```bash
-npm run android
+npm start -- --clear   # Clear Metro cache
+npm start              # Try again
 ```
+
+1. Download **Expo Go** app
+2. Run `npm start` in frontend directory
+3. Scan the QR code
+4. That's it! ✅
+
+### 5. Develop
+
+- Make code changes in your editor
+- Changes auto-reload on your device
+- In the terminal, press 'r' to reload, or shake phone to open dev menu
 
 ---
 
