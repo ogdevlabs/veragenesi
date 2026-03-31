@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Text, Platform } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LikertScale, ProgressBar } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
@@ -67,6 +67,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
   const [answers, setAnswers] = useState([]);
   const [selectedValue, setSelectedValue] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { submitArchetypeQuiz } = useApp();
 
   // Load saved progress on mount
@@ -86,35 +87,27 @@ const ArchetypeQuizScreen = ({ navigation }) => {
   }, []);
 
   const handleSaveAndExit = useCallback(() => {
-    Alert.alert(
-      'Guardar progreso',
-      `Has respondido ${answers.length} de ${ARCHETYPE_QUESTIONS.length} preguntas. ¿Deseas guardar tu avance y salir?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Guardar y salir',
-          style: 'default',
-          onPress: async () => {
-            try {
-              await storage.setItem(
-                PROGRESS_KEY,
-                JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
-              );
-            } catch {}
-            navigation.goBack();
-          },
-        },
-      ]
-    );
+    setShowExitConfirm(true);
+  }, []);
+
+  const confirmSaveAndExit = useCallback(async () => {
+    try {
+      await storage.setItem(
+        PROGRESS_KEY,
+        JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
+      );
+    } catch {}
+    navigation.goBack();
   }, [navigation, currentQuestion, answers]);
 
   const handleSelect = (value) => {
     setSelectedValue(value);
+    setShowExitConfirm(false);
   };
 
   const handleNext = async () => {
     if (!selectedValue) {
-      Alert.alert('Error', 'Por favor selecciona una opción');
+      return;
       return;
     }
 
@@ -134,11 +127,9 @@ const ArchetypeQuizScreen = ({ navigation }) => {
           await storage.removeItem(PROGRESS_KEY);
           navigation.navigate('EIAssessment');
         } else {
-          Alert.alert('Error', result.error || 'Failed to submit quiz');
           setIsLoading(false);
         }
       } catch (error) {
-        Alert.alert('Error', error.message || 'Failed to submit quiz');
         setIsLoading(false);
       }
     }
@@ -206,21 +197,43 @@ const ArchetypeQuizScreen = ({ navigation }) => {
         />
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Button
-          text="◀  Atrás"
-          variant="secondary"
-          onPress={handleBack}
-          disabled={currentQuestion === 0}
-          style={styles.footerButton}
-        />
-        <Button
-          text={currentQuestion === ARCHETYPE_QUESTIONS.length - 1 ? 'Finalizar  ✓' : 'Siguiente  ▶'}
-          onPress={handleNext}
-          disabled={isLoading}
-          style={[styles.footerButton, styles.nextBtn]}
-        />
-      </View>
+      {showExitConfirm ? (
+        <View style={styles.confirmBar}>
+          <Text style={styles.confirmText}>¿Guardar avance y salir?</Text>
+          <View style={styles.confirmBtns}>
+            <TouchableOpacity
+              style={styles.confirmNo}
+              onPress={() => setShowExitConfirm(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.confirmNoText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.confirmYes}
+              onPress={confirmSaveAndExit}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.confirmYesText}>Sí, guardar y salir</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.footer}>
+          <Button
+            text="◀  Atrás"
+            variant="secondary"
+            onPress={handleBack}
+            disabled={currentQuestion === 0}
+            style={styles.footerButton}
+          />
+          <Button
+            text={currentQuestion === ARCHETYPE_QUESTIONS.length - 1 ? 'Finalizar  ✓' : 'Siguiente  ▶'}
+            onPress={handleNext}
+            disabled={isLoading || !selectedValue}
+            style={[styles.footerButton, styles.nextBtn]}
+          />
+        </View>
+      )}
     </View>
   );
 };
@@ -291,6 +304,49 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.divider,
     backgroundColor: COLORS.background,
+  },
+  confirmBar: {
+    borderTopWidth: 1,
+    borderTopColor: '#FCA5A5',
+    backgroundColor: '#FFF5F5',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  confirmText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text_primary,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  confirmBtns: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  confirmNo: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  confirmNoText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text_secondary,
+  },
+  confirmYes: {
+    flex: 2,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.danger,
+    alignItems: 'center',
+  },
+  confirmYesText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.text_inverse,
   },
   footerButton: {
     flex: 1,
