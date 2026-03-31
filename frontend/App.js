@@ -2,10 +2,10 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Text } from 'react-native';
 
 import { AuthProvider, useAuth } from './src/state/AuthContext';
-import { AppProvider } from './src/state/AppContext';
+import { AppProvider, useApp } from './src/state/AppContext';
 
 // Screen imports
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -15,6 +15,7 @@ import ArchetypeQuizScreen from './src/screens/ArchetypeQuizScreen';
 import EIAssessmentScreen from './src/screens/EIAssessmentScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import DashboardScreen from './src/screens/DashboardScreen';
 import ToolDetailScreen from './src/screens/ToolDetailScreen';
 import ToolExecutionScreen from './src/screens/ToolExecutionScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -56,7 +57,7 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Assessment Flow (after login)
+// Assessment Flow (after login — shows dashboard first, then quizzes)
 const AssessmentStack = () => (
   <Stack.Navigator
     screenOptions={{
@@ -68,6 +69,11 @@ const AssessmentStack = () => (
       },
     }}
   >
+    <Stack.Screen
+      name="Dashboard"
+      component={DashboardScreen}
+      options={{ title: 'Mi Progreso', headerLeft: () => null }}
+    />
     <Stack.Screen
       name="ArchetypeQuiz"
       component={ArchetypeQuizScreen}
@@ -162,14 +168,38 @@ const AppStack = () => (
       tabBarActiveTintColor: COLORS.primary,
       tabBarInactiveTintColor: COLORS.text_tertiary,
       headerShown: false,
+      tabBarStyle: {
+        borderTopColor: COLORS.border,
+        backgroundColor: COLORS.background,
+        height: 58,
+        paddingBottom: 8,
+      },
+      tabBarLabelStyle: {
+        fontSize: 11,
+        fontWeight: '600',
+      },
     }}
   >
+    <Tab.Screen
+      name="DashboardTab"
+      component={DashboardScreen}
+      options={{
+        title: 'Inicio',
+        tabBarLabel: 'Inicio',
+        tabBarIcon: ({ focused }) => (
+          <Text style={{ fontSize: 20 }}>{focused ? '🏠' : '🏡'}</Text>
+        ),
+      }}
+    />
     <Tab.Screen
       name="HomeTab"
       component={HomeStack}
       options={{
-        title: 'Casa',
-        tabBarLabel: 'Casa',
+        title: 'Herramientas',
+        tabBarLabel: 'Herramientas',
+        tabBarIcon: ({ focused }) => (
+          <Text style={{ fontSize: 20 }}>{focused ? '🛠️' : '🔧'}</Text>
+        ),
       }}
     />
     <Tab.Screen
@@ -178,6 +208,9 @@ const AppStack = () => (
       options={{
         title: 'Perfil',
         tabBarLabel: 'Perfil',
+        tabBarIcon: ({ focused }) => (
+          <Text style={{ fontSize: 20 }}>{focused ? '👤' : '👥'}</Text>
+        ),
       }}
     />
     <Tab.Screen
@@ -186,6 +219,9 @@ const AppStack = () => (
       options={{
         title: 'Ayuda',
         tabBarLabel: 'Ayuda',
+        tabBarIcon: ({ focused }) => (
+          <Text style={{ fontSize: 20 }}>{focused ? '❓' : '💬'}</Text>
+        ),
       }}
     />
   </Tab.Navigator>

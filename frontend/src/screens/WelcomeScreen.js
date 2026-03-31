@@ -67,7 +67,7 @@ const WelcomeScreen = ({ navigation }) => {
         {/* CTA Button */}
         <Button
           text="Comenzar"
-          onPress={() => navigation.navigate('Auth')}
+          onPress={() => navigation.navigate('Login')}
           style={styles.button}
         />
       </View>

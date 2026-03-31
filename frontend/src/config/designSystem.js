@@ -1,9 +1,17 @@
 // Color scheme
 export const COLORS = {
   primary: '#6366F1', // Indigo
+  primary_dark: '#4F46E5',
   primary_light: '#E0E7FF',
+  primary_pale: '#EEF2FF',
   secondary: '#10B981', // Emerald
+  secondary_light: '#D1FAE5',
   accent: '#F59E0B', // Amber
+  accent_light: '#FEF3C7',
+  purple: '#8B5CF6',
+  purple_light: '#EDE9FE',
+  teal: '#0D9488',
+  teal_light: '#CCFBF1',
   success: '#10B981',
   warning: '#F59E0B',
   danger: '#EF4444',
@@ -12,6 +20,7 @@ export const COLORS = {
   // Neutral
   background: '#FFFFFF',
   surface: '#F9FAFB',
+  surface_alt: '#F3F4F6',
   border: '#E5E7EB',
   divider: '#F3F4F6',
   
@@ -25,6 +34,38 @@ export const COLORS = {
   high: '#10B981',
   moderate: '#F59E0B',
   low: '#EF4444',
+};
+
+// Shadow presets
+export const SHADOWS = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  colored: {
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
 };
 
 // Typography

@@ -9,6 +9,7 @@
     "dev": "nodemon src/index.js",
     "stop": "pkill -f 'nodemon src/index.js' || true",
     "stop-all": "cd .. && ./stop-all.sh",
+    "validate": "node scripts/validate-seed.js",
     "test": "jest --coverage",
     "lint": "eslint .",
     "format": "prettier --write ."

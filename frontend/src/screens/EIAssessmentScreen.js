@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Text, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LikertScale, ProgressBar } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
-import { COLORS, SPACING } from '../config/designSystem';
+import { COLORS, SPACING, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
+
+const PROGRESS_KEY = '@vera_ei_progress';
+
+const storage =
+  Platform.OS === 'web'
+    ? {
+        getItem: (k) =>
+          typeof window !== 'undefined' ? Promise.resolve(window.localStorage.getItem(k)) : Promise.resolve(null),
+        setItem: (k, v) => {
+          if (typeof window !== 'undefined') window.localStorage.setItem(k, v);
+          return Promise.resolve();
+        },
+        removeItem: (k) => {
+          if (typeof window !== 'undefined') window.localStorage.removeItem(k);
+          return Promise.resolve();
+        },
+      }
+    : AsyncStorage;
 
 const EI_QUESTIONS = [
   // Autoconciencia (Awareness) - 8 questions
@@ -97,6 +116,45 @@ const EIAssessmentScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { submitEIAssessment } = useApp();
 
+  // Load saved progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const saved = await storage.getItem(PROGRESS_KEY);
+        if (saved) {
+          const { question, answers: savedAnswers } = JSON.parse(saved);
+          setCurrentQuestion(question);
+          setAnswers(savedAnswers);
+          setSelectedValue(savedAnswers[question] ?? null);
+        }
+      } catch {}
+    };
+    loadProgress();
+  }, []);
+
+  const handleSaveAndExit = useCallback(() => {
+    Alert.alert(
+      'Guardar progreso',
+      `Has respondido ${answers.length} de ${EI_QUESTIONS.length} preguntas. ¿Deseas guardar tu avance y salir?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Guardar y salir',
+          style: 'default',
+          onPress: async () => {
+            try {
+              await storage.setItem(
+                PROGRESS_KEY,
+                JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
+              );
+            } catch {}
+            navigation.goBack();
+          },
+        },
+      ]
+    );
+  }, [navigation, currentQuestion, answers]);
+
   const handleSelect = (value) => {
     setSelectedValue(value);
   };
@@ -119,6 +177,7 @@ const EIAssessmentScreen = ({ navigation }) => {
       try {
         const result = await submitEIAssessment(newAnswers);
         if (result.success) {
+          await storage.removeItem(PROGRESS_KEY);
           navigation.navigate('Results');
         } else {
           Alert.alert('Error', result.error || 'Failed to submit assessment');
@@ -142,28 +201,47 @@ const EIAssessmentScreen = ({ navigation }) => {
 
   const question = EI_QUESTIONS[currentQuestion];
   const progress = currentQuestion + 1;
+  const pct = Math.round((answers.length / EI_QUESTIONS.length) * 100);
+  const isAutoconciencia = question.competency === 'Autoconciencia';
+  const accentColor = isAutoconciencia ? COLORS.primary : COLORS.purple;
+  const accentBg = isAutoconciencia ? COLORS.primary_pale : COLORS.purple_light;
 
   return (
     <View style={styles.container}>
+      {/* Progress header */}
       <View style={styles.header}>
+        <View style={styles.progressRow}>
+          <View style={[styles.competencyPill, { backgroundColor: accentBg }]}>
+            <Text style={[styles.competencyText, { color: accentColor }]}>
+              {isAutoconciencia ? '🪞' : '⚡'} {question.competency}
+            </Text>
+          </View>
+          <View style={styles.progressRight}>
+            <Text style={[styles.progressPct, { color: accentColor }]}>{pct}%</Text>
+            <TouchableOpacity
+              onPress={handleSaveAndExit}
+              style={styles.exitBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exitBtnText}>✕ Salir</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <ProgressBar current={progress} total={EI_QUESTIONS.length} />
-        <BodyText
-          text={`Pregunta ${progress} de ${EI_QUESTIONS.length}`}
-          size="small"
-          color={COLORS.text_secondary}
-          style={styles.progressText}
-        />
-        <BodyText
-          text={question.competency}
-          size="small"
-          color={COLORS.primary}
-          style={styles.competencyTag}
-        />
+        <Text style={styles.progressLabel}>
+          Pregunta {progress} de {EI_QUESTIONS.length}
+        </Text>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPadding}>
-        <BodyText text={question.scenario} size="large" style={styles.scenario} />
+        <View style={[styles.scenarioCard, { borderLeftColor: accentColor }]}>
+          <View style={[styles.scenarioNum, { backgroundColor: accentBg }]}>
+            <Text style={[styles.scenarioNumText, { color: accentColor }]}>Situación {progress}</Text>
+          </View>
+          <BodyText text={question.scenario} size="large" style={styles.scenario} />
+        </View>
 
+        <Text style={styles.scaleHint}>¿Qué tan fácil o difícil te resulta?</Text>
         <LikertScale
           labels={["Muy Difícil", "Difícil", "Moderado", "Fácil", "Muy Fácil"]}
           value={selectedValue}
@@ -173,17 +251,17 @@ const EIAssessmentScreen = ({ navigation }) => {
 
       <View style={styles.footer}>
         <Button
-          text="Atrás"
+          text="◀  Atrás"
           variant="secondary"
           onPress={handleBack}
           disabled={currentQuestion === 0}
           style={styles.footerButton}
         />
         <Button
-          text={currentQuestion === EI_QUESTIONS.length - 1 ? "Finalizar" : "Siguiente"}
+          text={currentQuestion === EI_QUESTIONS.length - 1 ? 'Finalizar  ✓' : 'Siguiente  ▶'}
           onPress={handleNext}
           disabled={isLoading}
-          style={styles.footerButton}
+          style={[styles.footerButton, styles.nextBtn]}
         />
       </View>
     </View>
@@ -198,15 +276,36 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.divider,
   },
-  progressText: {
-    textAlign: 'center',
-    marginTop: SPACING.sm,
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
   },
-  competencyTag: {
-    textAlign: 'center',
+  competencyPill: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.round,
+  },
+  competencyText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  progressPct: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: COLORS.text_tertiary,
     marginTop: SPACING.xs,
-    marginBottom: SPACING.md,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -214,17 +313,67 @@ const styles = StyleSheet.create({
   contentPadding: {
     padding: SPACING.lg,
   },
-  scenario: {
+  scenarioCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
     marginBottom: SPACING.lg,
+    borderLeftWidth: 4,
+    ...SHADOWS.sm,
+  },
+  scenarioNum: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.round,
+    marginBottom: SPACING.sm,
+  },
+  scenarioNumText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  scenario: {
+    lineHeight: 26,
+    color: COLORS.text_primary,
+  },
+  scaleHint: {
+    fontSize: 13,
+    color: COLORS.text_secondary,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    gap: SPACING.md,
+    gap: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.divider,
+    backgroundColor: COLORS.background,
   },
   footerButton: {
     flex: 1,
+  },
+  nextBtn: {
+    flex: 1.6,
+  },
+  progressRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  exitBtn: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: BORDER_RADIUS.round,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+  },
+  exitBtnText: {
+    color: COLORS.danger,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

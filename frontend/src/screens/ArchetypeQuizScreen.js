@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Text, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LikertScale, ProgressBar } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
-import { COLORS, SPACING } from '../config/designSystem';
+import { COLORS, SPACING, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
+
+const PROGRESS_KEY = '@vera_archetype_progress';
+
+const storage =
+  Platform.OS === 'web'
+    ? {
+        getItem: (k) =>
+          typeof window !== 'undefined' ? Promise.resolve(window.localStorage.getItem(k)) : Promise.resolve(null),
+        setItem: (k, v) => {
+          if (typeof window !== 'undefined') window.localStorage.setItem(k, v);
+          return Promise.resolve();
+        },
+        removeItem: (k) => {
+          if (typeof window !== 'undefined') window.localStorage.removeItem(k);
+          return Promise.resolve();
+        },
+      }
+    : AsyncStorage;
 
 const ARCHETYPE_QUESTIONS = [
   {
@@ -50,6 +69,45 @@ const ArchetypeQuizScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { submitArchetypeQuiz } = useApp();
 
+  // Load saved progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const saved = await storage.getItem(PROGRESS_KEY);
+        if (saved) {
+          const { question, answers: savedAnswers } = JSON.parse(saved);
+          setCurrentQuestion(question);
+          setAnswers(savedAnswers);
+          setSelectedValue(savedAnswers[question] ?? null);
+        }
+      } catch {}
+    };
+    loadProgress();
+  }, []);
+
+  const handleSaveAndExit = useCallback(() => {
+    Alert.alert(
+      'Guardar progreso',
+      `Has respondido ${answers.length} de ${ARCHETYPE_QUESTIONS.length} preguntas. ¿Deseas guardar tu avance y salir?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Guardar y salir',
+          style: 'default',
+          onPress: async () => {
+            try {
+              await storage.setItem(
+                PROGRESS_KEY,
+                JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
+              );
+            } catch {}
+            navigation.goBack();
+          },
+        },
+      ]
+    );
+  }, [navigation, currentQuestion, answers]);
+
   const handleSelect = (value) => {
     setSelectedValue(value);
   };
@@ -72,6 +130,8 @@ const ArchetypeQuizScreen = ({ navigation }) => {
       try {
         const result = await submitArchetypeQuiz(newAnswers);
         if (result.success) {
+          // Clear saved progress on successful submission
+          await storage.removeItem(PROGRESS_KEY);
           navigation.navigate('EIAssessment');
         } else {
           Alert.alert('Error', result.error || 'Failed to submit quiz');
@@ -95,21 +155,50 @@ const ArchetypeQuizScreen = ({ navigation }) => {
 
   const question = ARCHETYPE_QUESTIONS[currentQuestion];
   const progress = currentQuestion + 1;
+  const pct = Math.round((answers.length / ARCHETYPE_QUESTIONS.length) * 100);
+
+  const questionColors = [
+    COLORS.primary,
+    COLORS.purple,
+    COLORS.teal,
+    COLORS.secondary,
+    COLORS.accent,
+    COLORS.primary_dark,
+    COLORS.purple,
+  ];
+  const accentColor = questionColors[currentQuestion % questionColors.length];
 
   return (
     <View style={styles.container}>
+      {/* Progress header */}
       <View style={styles.header}>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>
+            Pregunta {progress} de {ARCHETYPE_QUESTIONS.length}
+          </Text>
+          <View style={styles.progressRight}>
+            <Text style={[styles.progressPct, { color: accentColor }]}>{pct}%</Text>
+            <TouchableOpacity
+              onPress={handleSaveAndExit}
+              style={styles.exitBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exitBtnText}>✕ Salir</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <ProgressBar current={progress} total={ARCHETYPE_QUESTIONS.length} />
-        <BodyText
-          text={`Pregunta ${progress} de ${ARCHETYPE_QUESTIONS.length}`}
-          size="small"
-          color={COLORS.text_secondary}
-          style={styles.progressText}
-        />
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPadding}>
-        <HeadingText text={question.question} level={2} style={styles.question} />
+        {/* Question card */}
+        <View style={[styles.questionCard, { borderLeftColor: accentColor }]}>
+          <View style={[styles.questionNum, { backgroundColor: accentColor + '18' }]}>
+            <Text style={[styles.questionNumText, { color: accentColor }]}>P{progress}</Text>
+          </View>
+          <HeadingText text={question.question} level={3} style={styles.question} />
+        </View>
+
         <LikertScale
           labels={question.labels}
           value={selectedValue}
@@ -119,17 +208,17 @@ const ArchetypeQuizScreen = ({ navigation }) => {
 
       <View style={styles.footer}>
         <Button
-          text="Atrás"
+          text="◀  Atrás"
           variant="secondary"
           onPress={handleBack}
           disabled={currentQuestion === 0}
           style={styles.footerButton}
         />
         <Button
-          text={currentQuestion === ARCHETYPE_QUESTIONS.length - 1 ? "Finalizar" : "Siguiente"}
+          text={currentQuestion === ARCHETYPE_QUESTIONS.length - 1 ? 'Finalizar  ✓' : 'Siguiente  ▶'}
           onPress={handleNext}
           disabled={isLoading}
-          style={styles.footerButton}
+          style={[styles.footerButton, styles.nextBtn]}
         />
       </View>
     </View>
@@ -144,10 +233,25 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.divider,
   },
-  progressText: {
-    textAlign: 'center',
-    marginTop: SPACING.sm,
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  progressLabel: {
+    fontSize: 13,
+    color: COLORS.text_secondary,
+    fontWeight: '500',
+  },
+  progressPct: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   content: {
     flex: 1,
@@ -155,17 +259,60 @@ const styles = StyleSheet.create({
   contentPadding: {
     padding: SPACING.lg,
   },
+  questionCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
+    borderLeftWidth: 4,
+    ...SHADOWS.sm,
+  },
+  questionNum: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.round,
+    marginBottom: SPACING.sm,
+  },
+  questionNumText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
   question: {
-    marginBottom: SPACING.lg,
+    lineHeight: 34,
+    color: COLORS.text_primary,
   },
   footer: {
     flexDirection: 'row',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    gap: SPACING.md,
+    gap: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.divider,
+    backgroundColor: COLORS.background,
   },
   footerButton: {
     flex: 1,
+  },
+  nextBtn: {
+    flex: 1.6,
+  },
+  progressRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  exitBtn: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: BORDER_RADIUS.round,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+  },
+  exitBtnText: {
+    color: COLORS.danger,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

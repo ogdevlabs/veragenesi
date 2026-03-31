@@ -1,11 +1,41 @@
+const bcrypt = require('bcrypt');
 const pool = require('./database');
+
+const seedDefaultUser = async () => {
+  const client = await pool.connect();
+  try {
+    // Migrate legacy 'admin' email to the canonical admin address
+    await client.query(
+      "UPDATE veragenesi.users SET email = 'admin@fererelabs.com' WHERE email = 'admin'"
+    );
+
+    const existing = await client.query(
+      "SELECT id FROM veragenesi.users WHERE email = 'admin@fererelabs.com'"
+    );
+    if (existing.rows.length > 0) {
+      console.log('✓ Default user already exists');
+      return;
+    }
+    const passwordHash = await bcrypt.hash('admin', 10);
+    await client.query(
+      'INSERT INTO veragenesi.users (email, first_name, password_hash) VALUES ($1, $2, $3)',
+      ['admin@fererelabs.com', 'Admin', passwordHash]
+    );
+    console.log('✓ Default user created (email: admin@fererelabs.com, password: admin)');
+  } catch (error) {
+    console.error('Error seeding default user:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 
 const seedArchetypes = async () => {
   const client = await pool.connect();
   try {
     // Check if archetypes already exist
-    const result = await client.query('SELECT COUNT(*) FROM archetypes');
-    if (result.rows[0].count > 0) {
+    const result = await client.query('SELECT COUNT(*) FROM veragenesi.archetypes');
+    if (parseInt(result.rows[0].count) > 0) {
       console.log('✓ Archetypes already seeded');
       return;
     }
@@ -97,7 +127,7 @@ const seedArchetypes = async () => {
 
     for (const archetype of archetypes) {
       await client.query(
-        `INSERT INTO archetypes (name_es, name_en, description_es, description_en, strengths_es, strengths_en, growth_areas_es, growth_areas_en)
+        `INSERT INTO veragenesi.archetypes (name_es, name_en, description_es, description_en, strengths_es, strengths_en, growth_areas_es, growth_areas_en)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           archetype.name_es,
@@ -121,4 +151,4 @@ const seedArchetypes = async () => {
   }
 };
 
-module.exports = seedArchetypes;
+module.exports = { seedArchetypes, seedDefaultUser };
