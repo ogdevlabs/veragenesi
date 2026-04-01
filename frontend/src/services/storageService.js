@@ -28,6 +28,11 @@ const webStorage = {
       window.localStorage.removeItem(key);
     }
   },
+  clear: async () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.clear();
+    }
+  },
 };
 
 // Use localStorage on web, AsyncStorage on native
@@ -105,7 +110,7 @@ const storageService = {
 
   // Clear all
   clearAll: async () => {
-    await AsyncStorage.clear();
+    await storage.clear();
   },
 };
 
