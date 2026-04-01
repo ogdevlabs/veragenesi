@@ -97,7 +97,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
         JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
       );
     } catch {}
-    navigation.goBack();
+    navigation.navigate('Dashboard');
   }, [navigation, currentQuestion, answers]);
 
   const handleSelect = (value) => {
