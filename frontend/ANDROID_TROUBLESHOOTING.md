@@ -2,6 +2,37 @@
 
 The errors you're seeing indicate issues with the Expo Android build. Here's how to resolve them.
 
+---
+
+## ❌ Error: "App is not 16 KB compatible / APK and ELF alignment checks failed"
+
+**Cause**: Android 15+ enforces 16 KB ELF page alignment on native `.so` libraries. React Native < 0.76 / Expo SDK < 52 does not meet this requirement.
+
+**Fix**: Project has been upgraded to Expo SDK 52 / React Native 0.76.9 which includes the 16 KB alignment fix.
+
+### Required: Node.js >= 18.18
+Expo SDK 52 (metro 0.81) requires Node.js 18.18 or higher. Check and upgrade:
+```bash
+node -v   # Must be >= 18.18
+
+# Upgrade with nvm (recommended)
+nvm install 20
+nvm use 20
+```
+
+### Then clear cache and restart
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+npx expo start --clear
+```
+
+### Update Expo Go on your device
+Ensure you have the **latest Expo Go** from Google Play — only versions supporting SDK 52 are 16 KB compliant.
+
+---
+
 ## ❌ Error: "DETECT_SCREEN_CAPTURE" Permission Denial
 
 **Fixed**: We've added the required permission to `app.json`.
