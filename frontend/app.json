@@ -27,6 +27,7 @@
       "bundler": "metro"
     },
     "plugins": [],
-    "scheme": "vera-genesi"
+    "scheme": "vera-genesi",
+    "newArchEnabled": true
   }
 }
