@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, StyleSheet, Animated } from 'react-native';
 import { HeadingText, BodyText, Button } from '../components/BasicComponents';
 import { ProgressBar } from '../components/FormComponents';
@@ -11,7 +11,7 @@ const CalmBreathExperience = ({ onComplete }) => {
   const [cycleCount, setCycleCount] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
   const [breathProgress, setBreathProgress] = useState(0);
-  const circleScale = new Animated.Value(1);
+  const circleScale = useRef(new Animated.Value(1)).current;
 
   const phases = [
     { name: 'Inhala', duration: 4000, instruction: 'Respira profundo por la nariz' },
