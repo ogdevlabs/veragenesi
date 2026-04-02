@@ -1,10 +1,7 @@
-name: CI
+name: CI — main
 
 on:
   push:
-    branches-ignore:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -62,4 +59,3 @@ jobs:
         run: npm test -- --watchAll=false --passWithNoTests
         env:
           NODE_ENV: test
-
