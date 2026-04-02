@@ -1,5 +1,9 @@
-import React, { createContext, useReducer, useCallback } from 'react';
+import React, { createContext, useReducer, useCallback, useEffect } from 'react';
 import { assessmentAPI, userAPI, toolsAPI } from '../services/apiService';
+import { storage } from '../services/storageService';
+import { useAuth } from './AuthContext';
+
+const LANG_STORAGE_KEY = '@vera_lang';
 
 const AppContext = createContext();
 
@@ -19,6 +23,8 @@ const initialState = {
   tools: [],
   loading: false,
   error: null,
+  lang: 'es',
+  assessmentsLoaded: false,
 };
 
 const appReducer = (state, action) => {
@@ -39,6 +45,10 @@ const appReducer = (state, action) => {
       return { ...state, error: action.payload };
     case 'CLEAR_ERROR':
       return { ...state, error: null };
+    case 'SET_LANG':
+      return { ...state, lang: action.payload };
+    case 'SET_ASSESSMENTS_LOADED':
+      return { ...state, assessmentsLoaded: action.payload };
     default:
       return state;
   }
@@ -46,6 +56,53 @@ const appReducer = (state, action) => {
 
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { token, isLoading: authLoading } = useAuth();
+
+  // Restore language preference from storage on mount
+  useEffect(() => {
+    const loadLang = async () => {
+      try {
+        const saved = await storage.getItem(LANG_STORAGE_KEY);
+        if (saved) dispatch({ type: 'SET_LANG', payload: saved });
+      } catch {}
+    };
+    loadLang();
+  }, []);
+
+  const loadAssessments = useCallback(async () => {
+    try {
+      const [archetypeRes, eiRes] = await Promise.allSettled([
+        assessmentAPI.getLatestAssessment('archetype'),
+        assessmentAPI.getLatestAssessment('ei-baseline'),
+      ]);
+      if (archetypeRes.status === 'fulfilled') {
+        dispatch({ type: 'SET_ARCHETYPE_RESULTS', payload: archetypeRes.value.data.results });
+      }
+      if (eiRes.status === 'fulfilled') {
+        dispatch({ type: 'SET_EI_RESULTS', payload: eiRes.value.data.results });
+      }
+    } catch {}
+    dispatch({ type: 'SET_ASSESSMENTS_LOADED', payload: true });
+  }, []);
+
+  // Auto-load assessment results when auth is ready
+  useEffect(() => {
+    if (!authLoading && token) {
+      loadAssessments();
+    } else if (!authLoading && !token) {
+      // Logged out — reset assessment state
+      dispatch({ type: 'SET_ARCHETYPE_RESULTS', payload: null });
+      dispatch({ type: 'SET_EI_RESULTS', payload: null });
+      dispatch({ type: 'SET_ASSESSMENTS_LOADED', payload: false });
+    }
+  }, [token, authLoading]);
+
+  const setLang = useCallback(async (newLang) => {
+    dispatch({ type: 'SET_LANG', payload: newLang });
+    try {
+      await storage.setItem(LANG_STORAGE_KEY, newLang);
+    } catch {}
+  }, []);
 
   const loadUserProfile = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -118,10 +175,12 @@ export const AppProvider = ({ children }) => {
   const value = {
     ...state,
     loadUserProfile,
+    loadAssessments,
     submitArchetypeQuiz,
     submitEIAssessment,
     recordToolUsage,
     clearError,
+    setLang,
   };
 
   return (

@@ -10,6 +10,7 @@ import { AppProvider, useApp } from './src/state/AppContext';
 // Screen imports
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import ArchetypeQuizScreen from './src/screens/ArchetypeQuizScreen';
 import EIAssessmentScreen from './src/screens/EIAssessmentScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
@@ -50,12 +51,12 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Assessment Flow (after login — shows dashboard first, then quizzes)
+// Assessment Flow (after login — pending evaluations screen first)
 const AssessmentStack = () => (
   <Stack.Navigator
     screenOptions={{
-      headerShown: true,
-      headerBackTitle: 'Atrás',
+      headerShown: false,
+      headerBackTitle: 'Back',
       headerTintColor: COLORS.primary,
       headerTitleStyle: {
         fontWeight: 'bold',
@@ -63,9 +64,8 @@ const AssessmentStack = () => (
     }}
   >
     <Stack.Screen
-      name="Dashboard"
-      component={DashboardScreen}
-      options={{ title: 'Mi Progreso', headerLeft: () => null }}
+      name="Onboarding"
+      component={OnboardingScreen}
     />
     <Stack.Screen
       name="ArchetypeQuiz"
@@ -222,10 +222,11 @@ const AppStack = () => (
 
 // Main Navigator that shows Auth or OnboardingOrApp based on state
 const MainNavigator = () => {
-  const { user, isLoading, token } = useAuth();
-  const { archetypeResults, eiResults } = useApp();
+  const { isLoading: authLoading, token } = useAuth();
+  const { archetypeResults, eiResults, assessmentsLoaded } = useApp();
 
-  if (isLoading) {
+  // Show spinner while auth is resolving, or while loading remote assessments
+  if (authLoading || (token && !assessmentsLoaded)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={COLORS.primary} />
