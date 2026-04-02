@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TextInput, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../config/designSystem';
 
-export const TextField = ({ label, placeholder, value, onChangeText, error, multiline = false, secureTextEntry = false, editable = true }) => (
+export const TextField = ({ label, placeholder, value, onChangeText, error, multiline = false, secureTextEntry = false, editable = true, ...rest }) => (
   <View style={styles.fieldContainer}>
     {label && <Text style={styles.label}>{label}</Text>}
     <TextInput
@@ -15,6 +15,8 @@ export const TextField = ({ label, placeholder, value, onChangeText, error, mult
       multiline={multiline}
       editable={editable}
       numberOfLines={multiline ? 4 : 1}
+      underlineColorAndroid="transparent"
+      {...rest}
     />
     {error && <Text style={styles.errorText}>{error}</Text>}
   </View>
