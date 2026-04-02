@@ -1,28 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { LikertScale, ProgressBar } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
 import { COLORS, SPACING, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
+import { storage } from '../services/storageService';
 
 const PROGRESS_KEY = '@vera_archetype_progress';
-
-const storage =
-  Platform.OS === 'web'
-    ? {
-        getItem: (k) =>
-          typeof window !== 'undefined' ? Promise.resolve(window.localStorage.getItem(k)) : Promise.resolve(null),
-        setItem: (k, v) => {
-          if (typeof window !== 'undefined') window.localStorage.setItem(k, v);
-          return Promise.resolve();
-        },
-        removeItem: (k) => {
-          if (typeof window !== 'undefined') window.localStorage.removeItem(k);
-          return Promise.resolve();
-        },
-      }
-    : AsyncStorage;
 
 const ARCHETYPE_QUESTIONS = [
   {

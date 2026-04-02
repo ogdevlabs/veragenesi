@@ -38,6 +38,8 @@ const webStorage = {
 // Use localStorage on web, AsyncStorage on native
 const storage = Platform.OS === 'web' ? webStorage : AsyncStorage;
 
+export { storage };
+
 const storageService = {
   // Auth
   saveAuthToken: async (token) => {

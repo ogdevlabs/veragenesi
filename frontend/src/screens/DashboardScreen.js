@@ -6,23 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../config/designSystem';
 import { useAuth } from '../state/AuthContext';
 import { useApp } from '../state/AppContext';
 import { ARCHETYPES, TOOLS } from '../utils/scoring';
 import UsageGuideFooter from '../components/UsageGuideFooter';
-
-// Cross-platform storage (web uses localStorage)
-const storage =
-  Platform.OS === 'web'
-    ? {
-        getItem: (k) =>
-          typeof window !== 'undefined' ? Promise.resolve(window.localStorage.getItem(k)) : Promise.resolve(null),
-      }
-    : AsyncStorage;
+import { storage } from '../services/storageService';
 
 const ARCHETYPE_KEY = '@vera_archetype_progress';
 const EI_KEY = '@vera_ei_progress';
