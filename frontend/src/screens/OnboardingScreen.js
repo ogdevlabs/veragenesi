@@ -5,11 +5,19 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   useWindowDimensions,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── Educational content ────────────────────────────────────────────────────
 
@@ -105,6 +113,7 @@ const STRINGS = {
 
 const OnboardingScreen = ({ navigation }) => {
   const { lang, archetypeResults, eiResults } = useApp();
+  const insets = useSafeAreaInsets();
   const t = STRINGS[lang] || STRINGS.es;
   const tiles = INFO_TILES[lang] || INFO_TILES.es;
 
@@ -113,6 +122,12 @@ const OnboardingScreen = ({ navigation }) => {
 
   const flatListRef = useRef(null);
   const [activeTile, setActiveTile] = useState(0);
+  const [tilesExpanded, setTilesExpanded] = useState(true);
+
+  const toggleTiles = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setTilesExpanded((v) => !v);
+  };
 
   const archetypeDone = !!archetypeResults;
   const eiDone = !!eiResults;
@@ -128,13 +143,21 @@ const OnboardingScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
         <Text style={styles.brandName}>VeraGenesi</Text>
         <Text style={styles.heading}>{t.heading}</Text>
         <Text style={styles.subheading}>{t.subheading}</Text>
       </View>
 
       {/* Horizontal educational tiles */}
+      <TouchableOpacity style={styles.tilesHeader} onPress={toggleTiles} activeOpacity={0.7}>
+        <Text style={styles.tilesHeaderText}>
+          {lang === 'en' ? 'About the evaluations' : 'Acerca de las evaluaciones'}
+        </Text>
+        <Text style={styles.tilesChevron}>{tilesExpanded ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
+
+      {tilesExpanded && (
       <View style={styles.tilesSection}>
         <FlatList
           ref={flatListRef}
@@ -168,6 +191,7 @@ const OnboardingScreen = ({ navigation }) => {
           ))}
         </View>
       </View>
+      )}
 
       {/* Evaluation cards */}
       <View style={styles.cardsSection}>
@@ -254,38 +278,58 @@ const styles = StyleSheet.create({
     color: COLORS.text_secondary,
   },
 
+  // Tiles collapse/expand header
+  tilesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+  },
+  tilesHeaderText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text_secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tilesChevron: {
+    fontSize: 11,
+    color: COLORS.text_tertiary,
+  },
+
   // Tiles
   tilesSection: {
-    flex: 1,
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
   },
   infoTile: {
     backgroundColor: COLORS.primary_pale,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
+    padding: SPACING.md,
     justifyContent: 'center',
-    minHeight: 160,
+    minHeight: 128,
     ...SHADOWS.md,
   },
   tileIcon: {
-    fontSize: 36,
-    marginBottom: SPACING.sm,
+    fontSize: 28,
+    marginBottom: SPACING.xs,
   },
   tileTitle: {
-    ...TYPOGRAPHY.heading4,
+    fontSize: 15,
+    fontWeight: '600',
     color: COLORS.primary_dark,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
   tileBody: {
-    ...TYPOGRAPHY.body_medium,
+    fontSize: 13,
     color: COLORS.text_primary,
-    lineHeight: 22,
+    lineHeight: 18,
   },
   dotsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: SPACING.md,
+    marginTop: SPACING.sm,
     gap: SPACING.xs,
   },
   dot: {

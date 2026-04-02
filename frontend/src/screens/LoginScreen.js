@@ -5,6 +5,7 @@ import { Button, BodyText } from '../components/BasicComponents';
 import { COLORS, SPACING, TYPOGRAPHY } from '../config/designSystem';
 import { useAuth } from '../state/AuthContext';
 import { useApp } from '../state/AppContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STRINGS = {
   es: {
@@ -41,6 +42,7 @@ const LoginScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const { login, isLoading } = useAuth();
   const { lang, setLang } = useApp();
+  const insets = useSafeAreaInsets();
 
   const t = STRINGS[lang] || STRINGS.es;
 
@@ -65,7 +67,7 @@ const LoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + SPACING.xl }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
