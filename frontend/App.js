@@ -8,7 +8,6 @@ import { AuthProvider, useAuth } from './src/state/AuthContext';
 import { AppProvider, useApp } from './src/state/AppContext';
 
 // Screen imports
-import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import ArchetypeQuizScreen from './src/screens/ArchetypeQuizScreen';
@@ -27,12 +26,12 @@ import { COLORS } from './src/config/designSystem';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Onboarding Flow (Welcome -> Login/Signup -> Assessments -> Results)
+// Auth Flow (Login -> Signup)
 const AuthStack = () => (
   <Stack.Navigator
     screenOptions={{
-      headerShown: true,
-      headerBackTitle: 'Atrás',
+      headerShown: false,
+      headerBackTitle: 'Back',
       headerTintColor: COLORS.primary,
       headerTitleStyle: {
         fontWeight: 'bold',
@@ -40,19 +39,13 @@ const AuthStack = () => (
     }}
   >
     <Stack.Screen
-      name="Welcome"
-      component={WelcomeScreen}
-      options={{ headerShown: false }}
-    />
-    <Stack.Screen
       name="Login"
       component={LoginScreen}
-      options={{ title: 'Iniciar Sesión' }}
     />
     <Stack.Screen
       name="Signup"
       component={SignupScreen}
-      options={{ title: 'Crear Cuenta' }}
+      options={{ headerShown: true, title: 'Create Account' }}
     />
   </Stack.Navigator>
 );

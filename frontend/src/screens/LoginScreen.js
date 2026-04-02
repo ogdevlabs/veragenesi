@@ -1,20 +1,52 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, ActivityIndicator, Switch, Text } from 'react-native';
 import { TextField } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
-import { COLORS, SPACING } from '../config/designSystem';
+import { COLORS, SPACING, TYPOGRAPHY } from '../config/designSystem';
 import { useAuth } from '../state/AuthContext';
+
+const STRINGS = {
+  es: {
+    emailLabel: 'Correo electrónico',
+    emailPlaceholder: 'tu@email.com',
+    passwordLabel: 'Contraseña',
+    passwordPlaceholder: '••••••••',
+    loginButton: 'Iniciar Sesión',
+    noAccount: '¿No tienes cuenta?',
+    createAccount: 'Crear cuenta',
+    emailRequired: 'El correo electrónico es obligatorio',
+    passwordRequired: 'La contraseña es obligatoria',
+    loginError: 'Error al iniciar sesión',
+    langToggleLabel: 'English',
+  },
+  en: {
+    emailLabel: 'Email',
+    emailPlaceholder: 'you@email.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    loginButton: 'Log In',
+    noAccount: "Don't have an account?",
+    createAccount: 'Create account',
+    emailRequired: 'Email is required',
+    passwordRequired: 'Password is required',
+    loginError: 'Login failed',
+    langToggleLabel: 'Español',
+  },
+};
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [lang, setLang] = useState('es');
   const { login, isLoading } = useAuth();
+
+  const t = STRINGS[lang];
 
   const handleLogin = async () => {
     const newErrors = {};
-    if (!email) newErrors.email = 'Email is required';
-    if (!password) newErrors.password = 'Password is required';
+    if (!email) newErrors.email = t.emailRequired;
+    if (!password) newErrors.password = t.passwordRequired;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -23,57 +55,78 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       await login(email, password);
-      // Navigation will happen automatically in App.js when auth state updates
     } catch (error) {
-      Alert.alert('Login Error', error.message || 'Failed to login');
+      Alert.alert(t.loginError, error.message || t.loginError);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <HeadingText text="Iniciar Sesión" level={1} style={styles.title} />
-      <BodyText text="Accede a tu cuenta" size="large" color={COLORS.text_secondary} style={styles.subtitle} />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {/* Brand header */}
+        <View style={styles.brand}>
+          <Text style={styles.brandName}>VeraGenesi</Text>
+        </View>
 
-      <TextField
-        label="Email"
-        placeholder="tu@email.com"
-        value={email}
-        onChangeText={(text) => {
-          setEmail(text);
-          setErrors({ ...errors, email: '' });
-        }}
-        error={errors.email}
-      />
+        {/* Form */}
+        <View style={styles.form}>
+          <TextField
+            label={t.emailLabel}
+            placeholder={t.emailPlaceholder}
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrors({ ...errors, email: '' });
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            error={errors.email}
+          />
 
-      <TextField
-        label="Contraseña"
-        placeholder="••••••••"
-        value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          setErrors({ ...errors, password: '' });
-        }}
-        secureTextEntry
-        error={errors.password}
-      />
+          <TextField
+            label={t.passwordLabel}
+            placeholder={t.passwordPlaceholder}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setErrors({ ...errors, password: '' });
+            }}
+            secureTextEntry
+            error={errors.password}
+          />
 
-      <Button
-        text={isLoading ? '...' : 'Iniciar Sesión'}
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={styles.button}
-      />
+          <Button
+            text={isLoading ? '...' : t.loginButton}
+            onPress={handleLogin}
+            disabled={isLoading}
+            style={styles.button}
+          />
 
+          <View style={styles.signupRow}>
+            <BodyText text={t.noAccount} color={COLORS.text_secondary} />
+            <Button
+              text={t.createAccount}
+              variant="secondary"
+              onPress={() => navigation.navigate('Signup')}
+              style={styles.linkButton}
+            />
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Footer */}
       <View style={styles.footer}>
-        <BodyText text="¿No tienes cuenta?" color={COLORS.text_secondary} />
-        <Button
-          text="Crear cuenta"
-          variant="secondary"
-          onPress={() => navigation.navigate('Signup')}
-          style={styles.linkButton}
-        />
+        <View style={styles.langToggle}>
+          <BodyText text={t.langToggleLabel} color={COLORS.text_secondary} size="small" />
+          <Switch
+            value={lang === 'en'}
+            onValueChange={(val) => setLang(val ? 'en' : 'es')}
+            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            thumbColor={lang === 'en' ? COLORS.primary_dark : COLORS.text_tertiary}
+          />
+        </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -83,27 +136,45 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   content: {
+    flexGrow: 1,
     padding: SPACING.lg,
+    paddingTop: SPACING.xl * 2,
     justifyContent: 'center',
   },
-  title: {
-    marginTop: SPACING.xl,
-    marginBottom: SPACING.sm,
-    textAlign: 'center',
+  brand: {
+    alignItems: 'center',
+    marginBottom: SPACING.xl * 1.5,
   },
-  subtitle: {
-    marginBottom: SPACING.xl,
-    textAlign: 'center',
+  brandName: {
+    ...TYPOGRAPHY.heading1,
+    color: COLORS.primary,
+    letterSpacing: 1,
+  },
+  form: {
+    width: '100%',
   },
   button: {
     marginTop: SPACING.lg,
   },
-  footer: {
+  signupRow: {
     marginTop: SPACING.xl,
     alignItems: 'center',
   },
   linkButton: {
     marginTop: SPACING.sm,
+  },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.surface,
+  },
+  langToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: SPACING.sm,
   },
 });
 
