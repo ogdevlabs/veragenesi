@@ -20,6 +20,45 @@ services:
     networks:
       - vera_genesi_network
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vera_genesi_api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: vera_genesi_dev
+      DB_USER: postgres
+      DB_PASSWORD: password
+      # Override with a strong secret in production via .env or secrets manager
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vera_genesi_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:3000}
+    container_name: vera_genesi_web
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - vera_genesi_network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 
