@@ -10,7 +10,8 @@ const STORAGE_KEYS = {
   OFFLINE_NOTES: 'offlineNotes',
 };
 
-// Web-compatible storage adapter
+// Web-compatible storage adapter (Expo Web only — excluded from native test coverage)
+/* istanbul ignore next */
 const webStorage = {
   setItem: async (key, value) => {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -36,6 +37,7 @@ const webStorage = {
 };
 
 // Use localStorage on web, AsyncStorage on native
+/* istanbul ignore next */
 const storage = Platform.OS === 'web' ? webStorage : AsyncStorage;
 
 export { storage };

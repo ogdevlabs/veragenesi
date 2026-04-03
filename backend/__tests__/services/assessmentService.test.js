@@ -196,4 +196,67 @@ describe('AssessmentService – pure scoring functions', () => {
       expect(result.autoconciencia.level).toBe('MODERADA');
     });
   });
+
+  // ─── storeArchetypeAssessment ──────────────────────────────────────────────────
+
+  describe('storeArchetypeAssessment', () => {
+    const db = require('../../src/config/database');
+
+    it('inserts and returns id + created_at', async () => {
+      const now = new Date();
+      db.query.mockResolvedValueOnce({ rows: [{ id: 1, created_at: now }] });
+
+      const result = await AssessmentService.storeArchetypeAssessment(1, [1,2,3,4,5,6,7], { primary: {} });
+      expect(result.id).toBe(1);
+      expect(result.created_at).toBe(now);
+    });
+
+    it('propagates DB errors', async () => {
+      db.query.mockRejectedValueOnce(new Error('DB error'));
+      await expect(
+        AssessmentService.storeArchetypeAssessment(1, [], {})
+      ).rejects.toThrow('DB error');
+    });
+  });
+
+  // ─── storeEIAssessment ──────────────────────────────────────────────────────────
+
+  describe('storeEIAssessment', () => {
+    const db = require('../../src/config/database');
+
+    it('inserts and returns id + created_at', async () => {
+      const now = new Date();
+      db.query.mockResolvedValueOnce({ rows: [{ id: 5, created_at: now }] });
+
+      const result = await AssessmentService.storeEIAssessment(2, Array(16).fill(3), { autoconciencia: 60 });
+      expect(result.id).toBe(5);
+    });
+
+    it('propagates DB errors', async () => {
+      db.query.mockRejectedValueOnce(new Error('insert fail'));
+      await expect(
+        AssessmentService.storeEIAssessment(2, [], {})
+      ).rejects.toThrow('insert fail');
+    });
+  });
+
+  // ─── getLatestAssessment ──────────────────────────────────────────────────────
+
+  describe('getLatestAssessment', () => {
+    const db = require('../../src/config/database');
+
+    it('returns the row when assessment exists', async () => {
+      const row = { id: 10, assessment_type: 'archetype', results: {}, created_at: new Date() };
+      db.query.mockResolvedValueOnce({ rows: [row] });
+
+      const result = await AssessmentService.getLatestAssessment(1, 'archetype');
+      expect(result).toBe(row);
+    });
+
+    it('returns null when no assessment exists', async () => {
+      db.query.mockResolvedValueOnce({ rows: [] });
+      const result = await AssessmentService.getLatestAssessment(1, 'ei-baseline');
+      expect(result).toBeNull();
+    });
+  });
 });

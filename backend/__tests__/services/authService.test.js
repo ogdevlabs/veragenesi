@@ -118,4 +118,72 @@ describe('AuthService', () => {
       expect(decoded.email).toBe('tk@test.com');
     });
   });
+
+  // ─── verifyToken ─────────────────────────────────────────────────────────────
+
+  describe('verifyToken', () => {
+    it('returns decoded payload for a valid token', async () => {
+      const { token } = await (async () => {
+        mockQuery
+          .mockResolvedValueOnce({ rows: [] })
+          .mockResolvedValueOnce({ rows: [{ id: 10, email: 'vt@test.com', first_name: 'Val' }] });
+        return AuthService.register('vt@test.com', 'Val', 'pass');
+      })();
+
+      const decoded = await AuthService.verifyToken(token);
+      expect(decoded).toHaveProperty('userId', 10);
+      expect(decoded).toHaveProperty('email', 'vt@test.com');
+    });
+
+    it('throws "Invalid token" for a malformed token', async () => {
+      await expect(AuthService.verifyToken('not.a.valid.token')).rejects.toThrow('Invalid token');
+    });
+
+    it('throws "Invalid token" for an expired token', async () => {
+      const expiredToken = require('jsonwebtoken').sign(
+        { userId: 1, email: 'x@x.com' },
+        process.env.JWT_SECRET || 'test_secret',
+        { expiresIn: '-1s' }
+      );
+      await expect(AuthService.verifyToken(expiredToken)).rejects.toThrow('Invalid token');
+    });
+  });
+
+  // ─── getUserById ─────────────────────────────────────────────────────────────
+
+  describe('getUserById', () => {
+    it('returns mapped user object when user exists', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: 20, email: 'g@test.com', first_name: 'Gaby', primary_archetype: null, secondary_archetypes: null }],
+      });
+
+      const user = await AuthService.getUserById(20);
+      expect(user.id).toBe(20);
+      expect(user.email).toBe('g@test.com');
+      expect(user.firstName).toBe('Gaby');
+    });
+
+    it('throws "User not found" when no rows returned', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+      await expect(AuthService.getUserById(999)).rejects.toThrow('User not found');
+    });
+  });
+
+  // ─── updateArchetype ─────────────────────────────────────────────────────────
+
+  describe('updateArchetype', () => {
+    it('returns updated row on success', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: 5, primary_archetype: '{"id":1}', secondary_archetypes: '[]' }],
+      });
+
+      const result = await AuthService.updateArchetype(5, { id: 1 }, []);
+      expect(result.id).toBe(5);
+    });
+
+    it('throws "User not found" when UPDATE returns no rows', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+      await expect(AuthService.updateArchetype(999, {}, [])).rejects.toThrow('User not found');
+    });
+  });
 });
