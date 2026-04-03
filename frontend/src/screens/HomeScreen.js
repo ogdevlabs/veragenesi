@@ -31,9 +31,13 @@ const TOOL_COLORS = [
 ];
 
 const HomeScreen = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { archetypeResults } = useApp();
   const [currentMood, setCurrentMood] = useState(5);
+
+  const handleSignOut = async () => {
+    await logout();
+  };
 
   const archetype = archetypeResults && ARCHETYPES[archetypeResults.primary];
   const mood = MOOD_ITEMS[currentMood];
@@ -54,11 +58,16 @@ const HomeScreen = ({ navigation }) => {
           <BodyText text="Herramientas de bienestar" color={COLORS.text_secondary} size="small" />
           <HeadingText text="¿Qué necesitas hoy?" level={2} style={styles.headerTitle} />
         </View>
-        {archetype && (
-          <View style={styles.archetypePill}>
-            <Text style={styles.archetypePillText}>{archetype.emoji} {archetype.name}</Text>
-          </View>
-        )}
+        <View style={styles.headerRight}>
+          {archetype && (
+            <View style={styles.archetypePill}>
+              <Text style={styles.archetypePillText}>{archetype.emoji} {archetype.name}</Text>
+            </View>
+          )}
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn} activeOpacity={0.7}>
+            <Text style={styles.signOutText}>⏏ Salir</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Mood Card ── */}
@@ -186,6 +195,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.primary,
     textAlign: 'center',
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+    gap: SPACING.xs,
+  },
+  signOutBtn: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.round,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  signOutText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.text_secondary,
   },
 
   // Mood card

@@ -5,6 +5,7 @@ import { Button, HeadingText, BodyText } from '../components/BasicComponents';
 import { COLORS, SPACING, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
 import { storage } from '../services/storageService';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PROGRESS_KEY = '@vera_archetype_progress';
 
@@ -53,6 +54,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { submitArchetypeQuiz } = useApp();
+  const insets = useSafeAreaInsets();
 
   // Load saved progress on mount
   useEffect(() => {
@@ -81,7 +83,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
         JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
       );
     } catch {}
-    navigation.navigate('Dashboard');
+    navigation.navigate('Onboarding');
   }, [navigation, currentQuestion, answers]);
 
   const handleSelect = (value) => {
@@ -91,7 +93,6 @@ const ArchetypeQuizScreen = ({ navigation }) => {
 
   const handleNext = async () => {
     if (!selectedValue) {
-      return;
       return;
     }
 
@@ -109,7 +110,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
         if (result.success) {
           // Clear saved progress on successful submission
           await storage.removeItem(PROGRESS_KEY);
-          navigation.navigate('EIAssessment');
+          navigation.navigate('Onboarding');
         } else {
           setIsLoading(false);
         }
@@ -146,7 +147,7 @@ const ArchetypeQuizScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Progress header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>
             Pregunta {progress} de {ARCHETYPE_QUESTIONS.length}
@@ -229,7 +230,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1,
