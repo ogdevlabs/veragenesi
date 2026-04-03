@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  Switch,
   useWindowDimensions,
   LayoutAnimation,
   Platform,
@@ -17,6 +18,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
 import { useApp } from '../state/AppContext';
+import { useAuth } from '../state/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── Educational content ────────────────────────────────────────────────────
@@ -112,7 +114,8 @@ const STRINGS = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const OnboardingScreen = ({ navigation }) => {
-  const { lang, archetypeResults, eiResults } = useApp();
+  const { lang, setLang, archetypeResults, eiResults } = useApp();
+  const { logout } = useAuth();
   const insets = useSafeAreaInsets();
   const t = STRINGS[lang] || STRINGS.es;
   const tiles = INFO_TILES[lang] || INFO_TILES.es;
@@ -129,6 +132,10 @@ const OnboardingScreen = ({ navigation }) => {
     setTilesExpanded((v) => !v);
   };
 
+  const handleSignOut = useCallback(async () => {
+    await logout();
+  }, [logout]);
+
   const archetypeDone = !!archetypeResults;
   const eiDone = !!eiResults;
 
@@ -144,7 +151,21 @@ const OnboardingScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
-        <Text style={styles.brandName}>VeraGenesi</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.brandName}>VeraGenesi</Text>
+          <View style={styles.headerActions}>
+            <Text style={styles.headerLangLabel}>{lang === 'en' ? 'EN' : 'ES'}</Text>
+            <Switch
+              value={lang === 'en'}
+              onValueChange={(val) => setLang(val ? 'en' : 'es')}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor={lang === 'en' ? COLORS.primary_dark : COLORS.text_tertiary}
+            />
+            <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn} activeOpacity={0.7}>
+              <Text style={styles.signOutText}>⏏ {lang === 'en' ? 'Sign out' : 'Salir'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <Text style={styles.heading}>{t.heading}</Text>
         <Text style={styles.subheading}>{t.subheading}</Text>
       </View>
@@ -261,6 +282,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.xl,
     paddingBottom: SPACING.md,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  headerLangLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.text_secondary,
+    letterSpacing: 0.5,
+  },
+  signOutBtn: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.round,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  signOutText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.text_secondary,
   },
   brandName: {
     ...TYPOGRAPHY.heading2,

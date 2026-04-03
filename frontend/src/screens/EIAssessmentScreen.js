@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Switch, TouchableOpacity, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LikertScale, ProgressBar } from '../components/FormComponents';
 import { Button, HeadingText, BodyText } from '../components/BasicComponents';
 import { COLORS, SPACING, SHADOWS, BORDER_RADIUS } from '../config/designSystem';
@@ -94,12 +95,13 @@ const EI_QUESTIONS = [
 ];
 
 const EIAssessmentScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [selectedValue, setSelectedValue] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const { submitEIAssessment } = useApp();
+  const { submitEIAssessment, lang, setLang } = useApp();
 
   // Load saved progress on mount
   useEffect(() => {
@@ -128,7 +130,7 @@ const EIAssessmentScreen = ({ navigation }) => {
         JSON.stringify({ question: currentQuestion, answers, savedAt: Date.now() })
       );
     } catch {}
-    navigation.navigate('Dashboard');
+    navigation.navigate('Onboarding');
   }, [navigation, currentQuestion, answers]);
 
   const handleSelect = (value) => {
@@ -184,7 +186,7 @@ const EIAssessmentScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Progress header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
         <View style={styles.progressRow}>
           <View style={[styles.competencyPill, { backgroundColor: accentBg }]}>
             <Text style={[styles.competencyText, { color: accentColor }]}>
@@ -192,6 +194,13 @@ const EIAssessmentScreen = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.progressRight}>
+            <Text style={styles.langLabel}>{lang === 'en' ? 'EN' : 'ES'}</Text>
+            <Switch
+              value={lang === 'en'}
+              onValueChange={(val) => setLang(val ? 'en' : 'es')}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor={lang === 'en' ? COLORS.primary_dark : COLORS.text_tertiary}
+            />
             <Text style={[styles.progressPct, { color: accentColor }]}>{pct}%</Text>
             <TouchableOpacity
               onPress={handleSaveAndExit}
@@ -272,7 +281,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
+    paddingTop: SPACING.md, // overridden inline with insets
     paddingBottom: SPACING.sm,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1,
@@ -303,6 +312,17 @@ const styles = StyleSheet.create({
     color: COLORS.text_tertiary,
     marginTop: SPACING.xs,
     textAlign: 'center',
+  },
+  progressRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  langLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.text_secondary,
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,

@@ -162,12 +162,7 @@ const AppStack = () => (
       tabBarActiveTintColor: COLORS.primary,
       tabBarInactiveTintColor: COLORS.text_tertiary,
       headerShown: false,
-      tabBarStyle: {
-        borderTopColor: COLORS.border,
-        backgroundColor: COLORS.background,
-        height: 58,
-        paddingBottom: 8,
-      },
+      tabBarStyle: { display: 'none' },
       tabBarLabelStyle: {
         fontSize: 11,
         fontWeight: '600',
