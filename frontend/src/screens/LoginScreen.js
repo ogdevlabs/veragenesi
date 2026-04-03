@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, ActivityIndicator, Switch, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Switch, Text } from 'react-native';
 import { TextField } from '../components/FormComponents';
-import { Button, HeadingText, BodyText } from '../components/BasicComponents';
+import { Button, BodyText } from '../components/BasicComponents';
 import { COLORS, SPACING, TYPOGRAPHY } from '../config/designSystem';
 import { useAuth } from '../state/AuthContext';
+import { useApp } from '../state/AppContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STRINGS = {
   es: {
@@ -38,10 +40,11 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
-  const [lang, setLang] = useState('es');
   const { login, isLoading } = useAuth();
+  const { lang, setLang } = useApp();
+  const insets = useSafeAreaInsets();
 
-  const t = STRINGS[lang];
+  const t = STRINGS[lang] || STRINGS.es;
 
   const handleLogin = async () => {
     const newErrors = {};
@@ -64,7 +67,7 @@ const LoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + SPACING.xl }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -125,8 +128,7 @@ const LoginScreen = ({ navigation }) => {
           <BodyText text={t.langToggleLabel} color={COLORS.text_secondary} size="small" />
           <Switch
             value={lang === 'en'}
-            onValueChange={(val) => setLang(val ? 'en' : 'es')}
-            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            onValueChange={(val) => setLang(val ? 'en' : 'es')}            trackColor={{ false: COLORS.border, true: COLORS.primary }}
             thumbColor={lang === 'en' ? COLORS.primary_dark : COLORS.text_tertiary}
           />
         </View>
