@@ -52,17 +52,17 @@ const checkDocker = () => {
       // Container not running or error checking, will start it
     }
 
-    // Start docker-compose
+    // Start docker compose
     log.info('🐳 Starting PostgreSQL container...');
     const rootDir = path.join(__dirname, '..');
     
-    const result = spawnSync('docker-compose', ['up', '-d'], {
+    const result = spawnSync('docker', ['compose', 'up', '-d', 'postgres'], {
       cwd: rootDir,
       stdio: 'inherit',
     });
 
     if (result.status !== 0) {
-      log.error('Failed to start docker-compose. Make sure Docker Desktop is running.');
+      log.error('Failed to start docker compose. Make sure Docker Desktop is running.');
       process.exit(1);
     }
 
@@ -78,7 +78,7 @@ const checkDocker = () => {
         break;
       } catch {
         if (i === 29) {
-          log.error('PostgreSQL failed to start. Check logs with: docker-compose logs postgres');
+          log.error('PostgreSQL failed to start. Check logs with: docker compose logs postgres');
           process.exit(1);
         }
         // Wait before retry
