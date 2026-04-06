@@ -7,7 +7,7 @@ ARG EXPO_PUBLIC_API_URL=http://localhost:3000
 ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
 
 COPY package.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 
