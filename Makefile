@@ -1,7 +1,12 @@
-.PHONY: help setup start stop stop-all restart logs clean db-shell dev test
+.PHONY: help setup start stop stop-all restart logs clean db-shell dev test launch launch-web launch-ios launch-android
 
 help:
 	@echo "VeraGenesi Development Commands"
+	@echo ""
+	@echo "  make launch         - Start everything: Postgres + backend + web + iOS + Android"
+	@echo "  make launch-web     - Start everything, Expo web only"
+	@echo "  make launch-ios     - Start everything, iOS simulator only"
+	@echo "  make launch-android - Start everything, Android emulator only"
 	@echo ""
 	@echo "  make setup      - One-time setup (Docker + dependencies)"
 	@echo "  make start      - Start Docker services"
@@ -16,8 +21,24 @@ help:
 
 setup:
 	@echo "🚀 Running setup..."
-	@chmod +x setup-local.sh
+	@chmod +x setup-local.sh launch.sh
 	@./setup-local.sh
+
+launch:
+	@chmod +x launch.sh
+	@./launch.sh
+
+launch-web:
+	@chmod +x launch.sh
+	@./launch.sh --web
+
+launch-ios:
+	@chmod +x launch.sh
+	@./launch.sh --ios
+
+launch-android:
+	@chmod +x launch.sh
+	@./launch.sh --android
 
 start:
 	@echo "🐳 Starting Docker services..."
